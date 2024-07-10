@@ -36,17 +36,6 @@ df["counter.numero_persones"] = numero_persones
 
 df = df[df["Day"] != 0].reset_index(drop=True)
 
-"""
-
-dia_ini = 16
-dia_fin = 17
-
-plt.plot(df["Date"][288*dia_ini:288*dia_fin], numero_persones[288*dia_ini:288*dia_fin], '.')
-plt.xticks(rotation=45)
-plt.show()
-
-"""
-
 print(df)
 def gaussian(x, mu, stddev, a):
     return a * np.exp(-((x - mu) / stddev) ** 2 / 2)
@@ -114,9 +103,9 @@ print(llista_mu)
 print(llista_stddev)
 print(llista_a)
 
-print(f"Mean mu {np.median(llista_mu)}")  # Mean mu 147.15055488945325
-print(f"Mean stddev {np.median(llista_stddev)}")  # Mean stddev 27.801050586247243
-print(f"Mean a {np.median(llista_a)}")  # Mean a 7.853790812477345
+print(f"Mean mu {np.median(llista_mu)}")  
+print(f"Mean stddev {np.median(llista_stddev)}") 
+print(f"Mean a {np.median(llista_a)}") 
 
 
 # Aproximació del numero de persones en u dia. Aproximació a una gausiana.
