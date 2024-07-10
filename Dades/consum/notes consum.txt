@@ -1,0 +1,11 @@
+PREDICCIÓ CONSUM BOMBA I CONSUM FANCOIL
+
+CONSUM BOBMA:
+- temperatura diposit (s'haura de fer un forecasting primer)
+- consigna diposit
+- (switch consigna diposit??)
+
+CONSUM FANCOIL:
+- temperatura lab
+- consigna lab
+- switch fancoil (on/off)
