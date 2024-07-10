@@ -9,12 +9,6 @@ from sklearn.svm import SVR
 import math
 import pytz
 
-# todo: Per fer funcionar els dos models s'han d'assumir 3 suposicions:
-#  1.- Coneixem el número de persones dins la sala durant tot el temps predit
-#  2.- La temperatura de la sala de màquines és una constant de 23ºC
-#  3.- La temperatura a l'equilibri quan fancoil i diposit estan obert segueix una corba exponencial
-#  (s'obté al fitxer proves_temp_dip.py)
-
 
 def convert_to_spain_time(utc_time):
     utc_zone = pytz.utc
@@ -71,51 +65,6 @@ def tendencia_dip(dip1, dip2, exte, tendencia_labo, consigna_dip, threshold_sup,
 
 def get_data_train(df_name):
     df = pd.read_excel(f"Dades/consum/{df_name}")
-
-    """
-    df = df.dropna().reset_index(drop=True)
-
-    # Columna de les dates no té nom, li posem un
-    df.columns.values[0] = "Date"
-    # Li sumem una hora pq esta en hora utf
-    df["Date"] = df["Date"].apply(convert_to_spain_time)
-    # Definim dies de la setmana festius i caps de setmana com a 0, la resta de dies de la setmana com a 1,2,3,4,5
-    unique_years = {timestamp.year for timestamp in df["Date"]}
-    festius_cat = holidays.Spain(prov='CT', years=unique_years)
-    dia_festiu = [1 if day in festius_cat else 0 for day in df["Date"]]
-    days = [day.weekday() + 1 if fest == 0 else 0 for day, fest in zip(df["Date"], dia_festiu)]
-    days = [0 if day > 5 else day for day in days]
-    hour = [day.hour + day.minute / 60 for day in df["Date"]]
-    df["Day"] = days
-    df["Hour"] = hour
-
-    # CONSIGNA LAB
-    # per la consigna quan el sistema esta ON (switch=1) definim consigna establerta manualment,
-    # quan esta OFF (switch=0) definim la consigna com a la temperatura exterior
-    consigna_lab = []
-    for hour, index_dumy in zip(df["Hour"], df.index):
-        if df.loc[index_dumy, "Consigna Laboratori Hivern Balanced"] > 0:
-            if hour < 5:
-                consigna_lab.append(20)
-            if 5 <= hour <= 17:
-                consigna_lab.append(24)
-            if hour > 17:
-                consigna_lab.append(20)
-        else:
-            consigna_lab.append(df.loc[index_dumy, "geotermia temperatura_exterior"])
-    df["consigna lab"] = consigna_lab
-
-    switch_fancoil_arreglat = [1 if i > 0 else 0 for i in df["Shelly Plus 1pm Fancoil switch_0"]]
-    df["Shelly Plus 1pm Fancoil switch_0"] = switch_fancoil_arreglat
-
-    switch_dip = [1 if i > 0 else 0 for i in df["geotermia potncia_bomba_geotrmia"]]
-    df["Switch bomba diposit"] = switch_dip
-
-    # Numero Persones
-    numero_persones = [math.ceil(i) for i in df["counter.numero_persones"]]
-    numero_persones = [i if i <= 11 else 11 for i in numero_persones]
-    df["counter.numero_persones"] = numero_persones
-    """
 
     data_x_dip = []
     data_y_dip = []
@@ -184,54 +133,6 @@ def model_svr(data_x, data_y, kernel, C, epsilon, degree, gamma):
 
 def test_svr(df_name, date_of_start, steps, kernel, C, epsilon, degree, gamma):
     df = pd.read_excel(f"Dades/consum/{df_name}")
-
-    """
-    df = df.dropna().reset_index(drop=True)
-
-    # Columna de les dates no té nom, li posem un
-    df.columns.values[0] = "Date"
-    # Li sumem una hora pq esta en hora utf
-    df["Date"] = df["Date"].apply(convert_to_spain_time)
-    # Definim dies de la setmana festius i caps de setmana com a 0, la resta de dies de la setmana com a 1,2,3,4,5
-    unique_years = {timestamp.year for timestamp in df["Date"]}
-    festius_cat = holidays.Spain(prov='CT', years=unique_years)
-    dia_festiu = [1 if day in festius_cat else 0 for day in df["Date"]]
-    days = [day.weekday() + 1 if fest == 0 else 0 for day, fest in zip(df["Date"], dia_festiu)]
-    days = [0 if day > 5 else day for day in days]
-    hour = [day.hour + day.minute / 60 for day in df["Date"]]
-    df["Day"] = days
-    df["Hour"] = hour
-
-    # CONSIGNA LAB
-    # per la consigna quan el sistema esta ON (switch=1) definim consigna asignada, quan esta OFF (switch=0) definim
-    # la consigna com a la temperatura exterior
-    consigna_lab = []
-    for hour, index_dumy in zip(df["Hour"], df.index):
-        if df.loc[index_dumy, "Consigna Laboratori Hivern Balanced"] > 0:
-            if hour < 5:
-                consigna_lab.append(20)
-            if 5 <= hour <= 17:
-                consigna_lab.append(24)
-            if hour > 17:
-                consigna_lab.append(20)
-        else:
-            consigna_lab.append(df.loc[index_dumy, "geotermia temperatura_exterior"])
-
-    df["consigna lab"] = consigna_lab
-
-    switch_fancoil_arreglat = [1 if i > 0 else 0 for i in df["Shelly Plus 1pm Fancoil switch_0"]]
-    df["Shelly Plus 1pm Fancoil switch_0"] = switch_fancoil_arreglat
-
-    switch_dip = [1 if i > 0 else 0 for i in df["geotermia potncia_bomba_geotrmia"]]
-    df["Switch bomba diposit"] = switch_dip
-
-    # Numero Persones
-    numero_persones = [math.ceil(i) for i in df["counter.numero_persones"]]
-    numero_persones = [i if i <= 11 else 11 for i in numero_persones]
-    df["counter.numero_persones"] = numero_persones
-    """
-
-    # x_test = df.loc[df["Date"] == date_of_start].copy()
     index = df.loc[df["Date"] == date_of_start].index[0]
 
     if index < 1:
@@ -343,8 +244,6 @@ def test_svr(df_name, date_of_start, steps, kernel, C, epsilon, degree, gamma):
     print(f"MAPE score: {mape}")
     print(f"MAE score: {mae_final}")
 
-    # x_test_date = df.loc[index: index+steps, "Date"]
-
     plt.plot(x_test_date, y_test_dip, label="Real data")
     plt.plot(x_test_date, y_predict_dip, label="Prediction")
     plt.plot(x_test_date, consignes, label="Instruction")
@@ -374,13 +273,9 @@ eps0 = 0.05
 gamm0 = "auto"
 pol0 = 1
 
-# [50, 'rbf', 0.05, 'auto', 1.310607542989364, 0.9251119709683806]
-
 ini_date = pd.to_datetime("2024-02-22T00:00:00") + pd.Timedelta(minutes=15)
 
 test_svr("noves_alternades/dades_test_tractades.xlsx", ini_date, steps0, ker0, C0, eps0, pol0, gamm0)
-
-
 ##################
 
 
@@ -417,15 +312,6 @@ for ker in kernel_list:
 vector_ordenat = sorted(r2_scores, key=lambda x: x[-1], reverse=True)
 
 print("Vector ordenat per la component r2:", vector_ordenat)
-
-
-# todo: Pressió estandard del dipòsit a 2 bars. Quan augmenta la temperatura l'aigua s'expandeix i la pressió augmenta
-#   llavors s'ha de buidar aigua del diposit perquè disminueixi la pressió i en consequencia el diposit no es podrà
-#   escalfar tant com abans  o directament no s'escalfarà.
-#   a recordar: si s'escalfa molt el diposit la pressió augmenta i dels 250l s'ha de buidar.
-#   Lo ideal seria tenir un regulador que si la pressió fos massa alta obris una aixeta per deixar sortir aigua i quan
-#   la pressió fos massa baixa obrir una aixeta per deixar entrar aigua i aixi sempre tenir els mateixos litres d'aigua.
-#   o simplement tenir un regulador.
 
 """
 ################################
@@ -502,5 +388,3 @@ sorted_models_by_mape = sorted(models_average, key=lambda v: v[-2], reverse=Fals
 print(f"Sorted models by average r2: {sorted_models_by_r2}")
 print(f"Sorted models by average mape: {sorted_models_by_mape}")
 """
-
-# Sorted models by average r2: [[50, 'rbf', 0.05, 'auto', 1.310607542989364, 0.9251119709683806], [10, 'rbf', 0.05, 'auto', 1.436501409253156, 0.9154112066729818], [10, 'rbf', 0.1, 'auto', 1.5463890796866933, 0.902643379049884], [5, 'rbf', 0.1, 'auto', 1.4590946521943355, 0.9025462827560322], [100, 'rbf', 0.05, 'auto', 1.3674940106155216, 0.9020159438993627], [50, 'rbf', 0.1, 'auto', 1.4341554534187315, 0.8961777488312549], [50, 'rbf', 0.01, 'auto', 1.4591118722925267, 0.8928708900799865], [25, 'rbf', 0.01, 'auto', 1.4877234405937327, 0.8793607352537901], [25, 'rbf', 0.05, 'auto', 1.516609541379635, 0.8689533538825032], [10, 'rbf', 0.01, 'auto', 1.684352836115948, 0.8443134905958255], [5, 'rbf', 0.01, 'auto', 1.6791789316422538, 0.829479511479191], [0.5, 'rbf', 0.1, 'auto', 1.8316369999966096, 0.8195196103662727], [0.5, 'rbf', 0.01, 'auto', 1.8882371737211385, 0.8120418101889355], [0.5, 'rbf', 0.05, 'auto', 1.9838027495317676, 0.8118519535997308], [25, 'rbf', 0.1, 'auto', 1.836902932564719, 0.8117242876323276], [1, 'rbf', 0.1, 'auto', 1.8683660235112725, 0.8049199858556308], [1, 'rbf', 0.01, 'auto', 1.9606516978626107, 0.8041155008706264], [5, 'rbf', 0.05, 'auto', 1.92786819460104, 0.7972297465624342], [100, 'rbf', 0.1, 'auto', 1.9842063948979174, 0.7797513737601794], [1, 'rbf', 0.05, 'auto', 2.037762666908334, 0.7741286151417891], [0.1, 'rbf', 0.01, 'scale', 2.2308058449375037, 0.7727432401199554], [5, 'rbf', 0.05, 'scale', 2.136701934996852, 0.772687270019009], [0.1, 'rbf', 0.05, 'scale', 2.2218072945717946, 0.7722424231453195], [10, 'rbf', 0.05, 'scale', 2.191023759834978, 0.7716221125416851], [0.5, 'rbf', 0.01, 'scale', 2.2043042246928195, 0.7679581514337538], [0.1, 'rbf', 0.1, 'scale', 2.3792411108171097, 0.7658485048284266], [0.5, 'rbf', 0.05, 'scale', 2.2004824201846938, 0.7622854562824448], [1, 'rbf', 0.01, 'scale', 2.2101525955807206, 0.7573472170347302], [1, 'rbf', 0.05, 'scale', 2.1621459380208456, 0.757173422008151], [25, 'rbf', 0.5, 'scale', 2.7093710385199397, 0.7538320778712546], [25, 'rbf', 0.1, 'scale', 2.311335976750945, 0.7514809929898263], [10, 'rbf', 0.1, 'scale', 2.3039006042941157, 0.7497414459303026], [5, 'rbf', 0.1, 'scale', 2.3061030051786044, 0.7489257742045164], [100, 'rbf', 0.01, 'auto', 2.007838373985238, 0.7429203811839384], [0.5, 'rbf', 0.1, 'scale', 2.4498737964184496, 0.739071467199297], [1, 'rbf', 0.1, 'scale', 2.417852238212821, 0.72959754525649], [10, 'rbf', 0.01, 'scale', 2.5104322614307666, 0.7294441769597857], [5, 'rbf', 0.01, 'scale', 2.5594913452245462, 0.7285328993667227], [100, 'rbf', 0.01, 'scale', 2.524605956106972, 0.7262986080835485], [25, 'rbf', 0.01, 'scale', 2.537197492215328, 0.7237432380298041], [25, 'rbf', 0.05, 'scale', 2.610091971172901, 0.7213566527495264], [50, 'rbf', 0.01, 'scale', 2.5638903849352306, 0.7189539929767229], [100, 'rbf', 0.05, 'scale', 2.7478355577026448, 0.707693364269233], [50, 'rbf', 0.05, 'scale', 2.7717168879379837, 0.7033681804687255], [1, 'rbf', 0.5, 'scale', 3.3581216684414676, 0.6767000922787232], [0.5, 'rbf', 0.5, 'scale', 3.451532656590829, 0.661669554328386], [100, 'rbf', 0.1, 'scale', 3.125700339386199, 0.6438357299275543], [50, 'rbf', 0.1, 'scale', 3.0927619360519096, 0.635074031355771], [50, 'rbf', 0.5, 'scale', 3.9083183516773836, 0.5298848224293381], [1, 'rbf', 0.5, 'auto', 3.923638936905585, 0.5179755431497718], [10, 'rbf', 0.5, 'auto', 4.03181475538412, 0.50742767417742], [5, 'rbf', 0.5, 'auto', 4.082076363268186, 0.5009426830478085], [50, 'rbf', 0.5, 'auto', 4.176304671344799, 0.4711364174826274], [25, 'rbf', 0.5, 'auto', 4.238744232745222, 0.46245035058653816], [5, 'rbf', 0.5, 'scale', 4.458576360196621, 0.46120660841219696], [10, 'rbf', 0.5, 'scale', 4.471235960359309, 0.4610203310825698], [100, 'rbf', 1, 'scale', 3.839035779037397, 0.4588729661576444], [0.5, 'rbf', 0.5, 'auto', 4.152825440157526, 0.4449924707428912], [100, 'rbf', 0.5, 'auto', 4.403924557300476, 0.4310187311028117], [100, 'rbf', 0.5, 'scale', 4.3024364717692425, 0.4306497642949002], [50, 'rbf', 1, 'scale', 4.095785337252618, 0.41295700506930555], [0.5, 'rbf', 5, 'scale', 4.952531750257093, 0.28206579939709625], [0.1, 'rbf', 5, 'scale', 4.639628837423169, 0.2653720604100346], [0.5, 'rbf', 1, 'auto', 4.6419318418922995, 0.22908066581956188], [5, 'rbf', 1, 'auto', 5.19857175436516, 0.2281059323304282], [1, 'rbf', 1, 'auto', 5.161295317405424, 0.21987687335832895], [25, 'rbf', 1, 'auto', 5.261111384185037, 0.2085646801208092], [50, 'rbf', 1, 'auto', 5.267954862657914, 0.20629684721236946], [100, 'rbf', 1, 'auto', 5.270537924596603, 0.20533485726526202], [0.1, 'rbf', 0.5, 'auto', 4.649647985713183, 0.2029563192569946], [0.1, 'rbf', 0.1, 'auto', 4.800414117745671, 0.2009527661809923], [10, 'rbf', 1, 'auto', 5.296971527767505, 0.19697210883322164], [1, 'rbf', 5, 'scale', 5.709145750764738, 0.1841031102824596], [0.1, 'rbf', 1, 'auto', 4.823212431532317, 0.11628899870292327], [0.1, 'rbf', 0.01, 'auto', 5.621850968167374, 0.09557113270164055], [0.1, 'rbf', 0.05, 'auto', 5.639373821089775, 0.0746010163932554], [1, 'rbf', 10, 'scale', 6.383046155514219, -0.12927089607885076], [5, 'rbf', 10, 'scale', 6.411794652420265, -0.13679778209349755], [10, 'rbf', 10, 'scale', 6.411794652420265, -0.13679778209349755], [25, 'rbf', 10, 'scale', 6.411794652420265, -0.13679778209349755], [50, 'rbf', 10, 'scale', 6.411794652420265, -0.13679778209349755], [100, 'rbf', 10, 'scale', 6.411794652420265, -0.13679778209349755]]
