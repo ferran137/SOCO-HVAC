@@ -25,8 +25,6 @@ df["Day"] = days
 df["Hour"] = hour
 
 # CONSIGNA LAB
-# per la consigna quan el sistema esta ON (switch=1) definim consigna establerta manualment,
-# quan esta OFF (switch=0) definim la consigna com a la temperatura exterior
 consigna_lab = []
 for hour, index_dumy in zip(df["Hour"], df.index):
     if df.loc[index_dumy, "Consigna Laboratori Hivern Balanced"] > 0:
@@ -114,10 +112,3 @@ plt.legend()
 plt.savefig(f"Plots/plots_overleaf/equilibrium_tank.jpg")
 plt.close()
 plt.show()
-
-# Aproximació de la temperatura a la que ha de tendir el diposit quan tant el diposit com el fancoil estan oberts.
-# Ho aproxim-ho amb una exponencial. (executar el programa ja es veu el plot guapo)
-# Per seleccionar les dade el que he fet és separar les temperatures per consignes, mirar les temperatures del
-# laboratori que queden per sota de la consigna quan els dos estan oberts. Fer la mitjana i agafar aquests punts per
-# construir una exponencial perquè sembla ser la corva que s'hi adapta millor
-# best fitting curve. f(x) = A*e^(bx) . A=0.01, b=0.129
